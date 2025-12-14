@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sweet Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #fff3e0;
+            text-align: center;
+        }
+        .card {
+            background: white;
+            width: 500px;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        input, button {
+            margin: 5px;
+            padding: 8px;
+        }
+        button {
+            background: orange;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+            padding: 8px;
+            background: #ffe0b2;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🍭 Sweet Shop Dashboard</h1>
+
+<div class="card">
+    <h3>Add Sweet</h3>
+    <input id="name" placeholder="Sweet Name">
+    <input id="price" type="number" placeholder="Price">
+    <input id="quantity" type="number" placeholder="Quantity">
+    <br>
+    <button onclick="addSweet()">Add Sweet</button>
+</div>
+
+<div class="card">
+    <h3>Your Sweets</h3>
+    <button onclick="loadSweets()">Load Sweets</button>
+    <ul id="sweetList"></ul>
+</div>
+
+<script>
+    const username = localStorage.getItem("username");
+
+    if (!username) {
+        alert("No user logged in");
+        window.location.href = "/index.html";
+    }
+
+    function addSweet() {
+        const sweet = {
+            name: document.getElementById("name").value,
+            price: parseInt(document.getElementById("price").value),
+            quantity: parseInt(document.getElementById("quantity").value),
+            username: username
+        };
+
+        fetch("/api/sweets/add", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(sweet)
+        })
+        .then(res => res.json())
+        .then(() => {
+            loadSweets();
+        });
+    }
+
+    function loadSweets() {
+        fetch("/api/sweets/" + username)
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById("sweetList");
+                list.innerHTML = "";
+                data.forEach(s => {
+                    const li = document.createElement("li");
+                    li.innerHTML =
+                        `${s.name} - ₹${s.price} | Qty: ${s.quantity}
+                        <br>
+                        <button onclick="buySweet(${s.id})">Buy</button>
+                        <button onclick="deleteSweet(${s.id})">Delete</button>`;
+                    list.appendChild(li);
+                });
+            });
+    }
+
+    function buySweet(id) {
+        fetch("/api/sweets/buy/" + id, { method: "POST" })
+            .then(() => loadSweets());
+    }
+
+    function deleteSweet(id) {
+        fetch("/api/sweets/" + id, { method: "DELETE" })
+            .then(() => loadSweets());
+    }
+</script>
+
+</body>
+</html>
