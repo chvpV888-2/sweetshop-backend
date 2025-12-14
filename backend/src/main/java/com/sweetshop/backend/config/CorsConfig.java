@@ -1,16 +1,23 @@
-# -------- BUILD STAGE --------
-FROM maven:3.9.9-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY backend/pom.xml backend/mvnw backend/.mvn ./backend/
-WORKDIR /app/backend
-RUN mvn -B dependency:go-offline
+package com.sweetshop.backend.config;
 
-COPY backend ./backend
-RUN mvn clean package -DskipTests
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-# -------- RUN STAGE --------
-FROM eclipse-temurin:17-jre
-WORKDIR /app
-COPY --from=build /app/backend/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+@Configuration
+public class CorsConfig {
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**") // Apply to all endpoints
+                        .allowedOrigins("*") // Allow all origins (or change to your frontend URL)
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*");
+            }
+        };
+    }
+}
