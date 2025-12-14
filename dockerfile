@@ -1,11 +1,18 @@
 # -------- BUILD STAGE --------
 FROM maven:3.9.9-eclipse-temurin-17 AS build
 WORKDIR /app
+
+# Copy pom and wrapper first (for caching)
 COPY backend/pom.xml backend/mvnw backend/.mvn ./backend/
+
+# Switch into the backend folder
 WORKDIR /app/backend
 RUN mvn -B dependency:go-offline
 
-COPY backend ./backend
+# --- FIX IS HERE ---
+# Copy the CONTENTS of the local 'backend' folder into the current directory (/app/backend)
+COPY backend . 
+
 RUN mvn clean package -DskipTests
 
 # -------- RUN STAGE --------
